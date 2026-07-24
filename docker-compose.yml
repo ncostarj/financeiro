@@ -1,5 +1,5 @@
 services:
-  financeiro_app:
+  financeiro-app:
     image: homelab/php:8.2
     container_name: financeiro_app
     working_dir: /var/www/html/financeiro
@@ -9,7 +9,7 @@ services:
     networks:
       - proxy
       - internal
-  financeiro_nginx:
+  financeiro-nginx:
     image: nginx:alpine
     container_name: financeiro_nginx
     working_dir: /var/www/html/financeiro
