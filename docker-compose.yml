@@ -1,26 +1,33 @@
 services:
-  financeiro-app:
-    image: homelab/php:8.2
-    container_name: financeiro_app
-    working_dir: /var/www/html/financeiro
-    volumes:
-      - ./src:/var/www/html/financeiro
-    restart: unless-stopped
-    networks:
-      - proxy
-      - internal
   financeiro-nginx:
     image: nginx:alpine
-    container_name: financeiro_nginx
-    working_dir: /var/www/html/financeiro
+    hostname: financeiro-nginx
+    container_name: financeiro-nginx
+    restart: always
     volumes:
       - ./src:/var/www/html/financeiro
-      - ./docker/config/nginx/conf.d:/etc/nginx/conf.d
-    restart: unless-stopped
+      - ./config/conf.d:/etc/nginx/conf.d
     depends_on:
-      - financeiro_app
+      - financeiro-php
     networks:
       - proxy
+  financeiro-php:
+    image: homelab/php:8.2
+    hostname: financeiro-php
+    container_name: financeiro-php
+    restart: always
+    build:
+      context: ../../infra/php/82
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    volumes:
+      - ./src:/var/www/html/financeiro
+      - ~/.ssh:/home/proxy/.ssh:ro
+    working_dir: /var/www/html/financeiro
+    networks:
+      - proxy
+      - internal 
 networks:
   proxy:
     external: true
