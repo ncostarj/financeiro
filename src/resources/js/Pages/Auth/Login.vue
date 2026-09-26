@@ -19,7 +19,7 @@ const submit = () => {
 
     <div class="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
         <div class="max-w-md w-full bg-white rounded-xl shadow-md p-8">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Acesso Restrito</h2>
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">{{ $page.props.appName }}</h2>
 
             <form @submit.prevent="submit" class="space-y-4">
                 <!-- E-mail -->

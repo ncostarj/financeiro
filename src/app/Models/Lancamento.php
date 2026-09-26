@@ -44,23 +44,49 @@ class Lancamento extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'data',
         'descricao',
-        'parcelado',
-        'parcela',
-        'qtd_parcelas',
+        'tipo',
+        'status',
+        'data_vencimento',
+        'data_pagamento',
+        'valor',
         'moeda_estrangeira',
         'moeda',
         'valor_moeda',
         'cotacao',
+        'parcelado',
+        'parcela',
+        'qtd_parcelas',
         'valor',
         'tipo_cartao',
         'numero_cartao',
         'nome_titular',
     ];
 
+protected $casts = [
+        'data_vencimento' => 'date',
+        'data_pagamento' => 'date',
+        'valor' => 'decimal:2',
+        'moeda_estrangeira' => 'boolean',
+        'valor_moeda' => 'decimal:2',
+        'cotacao' => 'decimal:4',
+        'parcelado' => 'boolean',
+        'parcela' => 'integer',
+        'qtd_parcelas' => 'integer',
+    ];
+
+    public function meioPagamento(): BelongsTo
+    {
+        return $this->belongsTo(MeioPagamento::class, 'meio_pagamento_id');
+    }
+
     public function fatura(): BelongsTo
     {
-        return $this->belongsTo(Fatura::class);
-    }    
+        return $this->belongsTo(Fatura::class, 'fatura_id');
+    }
+
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
+    }       
 }
