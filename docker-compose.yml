@@ -16,11 +16,6 @@ services:
     hostname: financeiro-php
     container_name: financeiro-php
     restart: always
-    build:
-      context: ../../infra/php/82
-      args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
     volumes:
       - ./src:/var/www/html/financeiro
       - ~/.ssh:/home/proxy/.ssh:ro

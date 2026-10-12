@@ -64,10 +64,11 @@ class CategoriaSeeder extends Seeder
                         'subcategorias' => [
                             ['nome' => 'Supermercado', 'tipo' => 'despesa', 'cor' => '#EF4444'],
                             ['nome' => 'Restaurantes', 'tipo' => 'despesa', 'cor' => '#EF4444'],
-                            ['nome' => 'Delivery', 'tipo' => 'despesa', 'cor' => '#EF4444'],
-                            ['nome' => 'Fast Food', 'tipo' => 'despesa', 'cor' => '#EF4444'],
                             ['nome' => 'Padaria', 'tipo' => 'despesa', 'cor' => '#EF4444'],
-                            ['nome' => 'Lanches', 'tipo' => 'despesa', 'cor' => '#EF4444']
+                            ['nome' => 'Doceria', 'tipo' => 'despesa', 'cor' => '#EF4444'],
+                            ['nome' => 'Lanches', 'tipo' => 'despesa', 'cor' => '#EF4444'],
+                            ['nome' => 'iFood', 'tipo' => 'despesa', 'cor' => '#EF4444'],
+                            ['nome' => '99', 'tipo' => 'despesa', 'cor' => '#EF4444']
                         ]
                     ],
                     [
@@ -77,11 +78,11 @@ class CategoriaSeeder extends Seeder
                         'subcategorias' => [
                             ['nome' => 'Aluguel', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
                             ['nome' => 'Condomínio', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
-                            ['nome' => 'Energia Elétrica', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
-                            ['nome' => 'Gás', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
                             ['nome' => 'Água', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
-                            ['nome' => 'Internet', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
+                            ['nome' => 'Luz', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
+                            ['nome' => 'Gás', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
                             ['nome' => 'TV', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
+                            ['nome' => 'Internet', 'tipo' => 'despesa', 'cor' => '#3B82F6'],
                             ['nome' => 'IPTU', 'tipo' => 'despesa', 'cor' => '#3B82F6'], // Movido para cá
                             ['nome' => 'Manutenção da Casa/Apartamento', 'tipo' => 'despesa', 'cor' => '#3B82F6']
                         ]
@@ -102,7 +103,7 @@ class CategoriaSeeder extends Seeder
                     ],
                     [
                         // CENTRO DE CUSTO AJUSTADO: Exclusivo para mobilidade / deslocamento sem carro próprio
-                        'nome' => 'Transporte Diário',
+                        'nome' => 'Transporte',
                         'tipo' => 'despesa',
                         'cor'  => '#6366F1', // Indigo
                         'subcategorias' => [
@@ -119,8 +120,6 @@ class CategoriaSeeder extends Seeder
                             ['nome' => 'Plano de Saúde', 'tipo' => 'despesa', 'cor' => '#14B8A6'],
                             ['nome' => 'Farmácia', 'tipo' => 'despesa', 'cor' => '#14B8A6'],
                             ['nome' => 'Planos de academias', 'tipo' => 'despesa', 'cor' => '#14B8A6'],
-                            ['nome' => 'Consultas', 'tipo' => 'despesa', 'cor' => '#14B8A6'],
-                            ['nome' => 'Exames', 'tipo' => 'despesa', 'cor' => '#14B8A6']
                         ]
                     ],
                     [
@@ -131,7 +130,9 @@ class CategoriaSeeder extends Seeder
                             ['nome' => 'Amazon', 'tipo' => 'despesa', 'cor' => '#8B5CF6'],
                             ['nome' => 'Mercado Livre', 'tipo' => 'despesa', 'cor' => '#8B5CF6'],
                             ['nome' => 'Shopee', 'tipo' => 'despesa', 'cor' => '#8B5CF6'],
-                            ['nome' => 'Shein', 'tipo' => 'despesa', 'cor' => '#8B5CF6']
+                            ['nome' => 'Shein', 'tipo' => 'despesa', 'cor' => '#8B5CF6'],
+                            ['nome' => 'Lojas Americanas', 'tipo' => 'despesa', 'cor' => '#8B5CF6'],
+                            ['nome' => 'Outras Compras', 'tipo' => 'despesa', 'cor' => '#8B5CF6']
                         ]
                     ],
                     [

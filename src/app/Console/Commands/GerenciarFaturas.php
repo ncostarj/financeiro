@@ -15,7 +15,7 @@ class GerenciarFaturas extends Command
      *
      * @var string
      */
-    protected $signature = 'faturas:gerenciar';
+    protected $signature = 'faturas:gerenciar {nome?}';
 
     //  {?data_vencimento}
 
@@ -31,8 +31,22 @@ class GerenciarFaturas extends Command
      */
     public function handle()
     {
+        $nomeArquivo = $this->argument('nome');
+        $ano = date('Y');
+ 
+        if(empty($nomeArquivo)) {
+            $nomeArquivo = "relatorio_financeiro_{$ano}.xlsx";
+        }
 
-        Excel::store(new RelatorioFinanceiroExport, 'relatorio_financeiro.xlsx');
+        // .xlsx é obrigatório aqui: o gráfico e os dropdowns do Dashboard
+        // não são suportados no formato binário antigo (.xls).
+        if (!str_ends_with($nomeArquivo, '.xlsx')) {
+            $nomeArquivo .= '.xlsx';
+        }
+ 
+        Excel::store(new RelatorioFinanceiroExport(), $nomeArquivo, 'local');
+ 
+        $this->info("Relatório gerado: storage/app/{$nomeArquivo}");
 
     }
 }

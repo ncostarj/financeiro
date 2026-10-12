@@ -9,6 +9,11 @@ use App\Models\Categoria;
 use App\Models\Fatura;
 use App\Models\Lancamento;
 use App\Models\MeioPagamento;
+use App\Services\CategoriaService;
+use App\Services\Imports\FaturaCsvImport;
+use App\Services\Imports\FaturaImportBase;
+use App\Services\Imports\FaturaXlsImport;
+use App\Services\Imports\FaturaXlsImportBase;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,7 +24,7 @@ class ImportarFaturas extends Command
     /**
      * @var string
      */
-    protected $signature = 'faturas:importar';
+    protected $signature = 'faturas:importar {ano?}';
 
     /**
      * @var string
@@ -39,130 +44,92 @@ class ImportarFaturas extends Command
         'application/csv',
     ];
 
+    private function getImportador(array $fatura, string $arquivo): FaturaImportBase
+    {
+
+        $mime = Storage::mimeType("{$fatura['path']}/{$arquivo}");
+
+        if (in_array($mime, self::MIMES_XLS)) {
+            return new FaturaXlsImport();
+        }
+
+        if (in_array($mime, self::MIMES_CSV)) {
+            return new FaturaCsvImport($fatura['delimiter']);
+        }
+
+        throw new RuntimeException("Tipo de arquivo não suportado (mime: {$mime}) para {$arquivo}");
+    }
+
     public function handle()
     {
         $this->info("Início do script");
 
-        $ano = '2026';
+        $ano = $this->argument('ano') ?? date('Y');
 
-        $paths = [
-            "instituicoes_financeiras/itau/faturas/{$ano}/xls",
-            "instituicoes_financeiras/nubank/faturas/{$ano}/csv",
+        $faturas = [
+            [
+                'path' => "instituicoes_financeiras/itau/faturas/{$ano}",
+            ],
+            [
+                'path' => "instituicoes_financeiras/nubank/faturas/{$ano}",
+                'delimiter' => ','
+            ],
         ];
 
-        foreach ($paths as $path) {
+        // Coleção master que vai unificar Itaú e Nubank
+        $lancamentos = collect();
 
-            foreach (Storage::files($path) as $arquivo) {
-    
-                $nomeArquivo = basename($arquivo);
-    
-                preg_match('/\.(xls|xlsx|csv)$/i', $nomeArquivo, $matchesExtensao);
-    
-                if (empty($matchesExtensao)) {
-                    continue;
-                }
-    
-                $this->info("Importando {$nomeArquivo}.");
-    
-                preg_match('/(?<meio_pagamento>(itaucard|nubank))_(?<status>(pendente|fechada|pago))_(?<ano>[0-9]{4})(?<mes>[0-9]{2})(?<dia>[0-9]{2})/', $nomeArquivo, $matches);
-    
-                $dataFechamento = "{$matches['ano']}-{$matches['mes']}-02";
-                $dataVencimento = "{$matches['ano']}-{$matches['mes']}-{$matches['dia']}";
-    
-                $meioPagamento = MeioPagamento::where('nome', 'like', "%{$matches['meio_pagamento']}%")->first();
-                $status = $matches['status'] == 'pendente' ? 'aberta' : $matches['status'];
-    
-                $fatura = $meioPagamento->faturas()->firstOrCreate(
-                    ['data_vencimento' => $dataVencimento],
-                    [
-                        'data_fechamento' => $dataFechamento,
-                        'data_vencimento' => $dataVencimento,
-                        'status' => $status
-                    ]
-                );
-    
-                try {
-                    $importador = $this->resolverImportador($arquivo, $fatura);
-                } catch (RuntimeException $e) {
-                    $this->warn($e->getMessage());
-                    continue;
-                }
-    
-                Excel::import($importador, $arquivo);
-    
-                $resumo = [];
-    
-                $lancamentosPorTitular = $fatura->lancamentos->groupBy('nome_titular')->sortKeys();
-    
-                $totalFamiliaCosta = 0;
-                foreach ($lancamentosPorTitular as $titular => $lancamentos) {
-    
-                    $resumo["total_por_titular"][] = [
-                        'nome' => $titular,
-                        'subtotal' => round($lancamentos->sum('valor'), 2),
-                    ];
-    
-                    if ($titular == 'carol' || $titular == 'newton') {
-                        $totalFamiliaCosta += round($lancamentos->sum('valor'), 2);
-                    }
-                }
-    
-                $resumo["total_por_titular"][] = [
-                    'nome' => 'familia_costa',
-                    'subtotal' => $totalFamiliaCosta,
-                ];
-    
-                $totalFatura = $fatura->lancamentos->sum('valor');
-    
-                $fatura->update([
-                    'total' => $totalFatura,
-                    'resumo' => $resumo,
-                ]);
-    
-                $dataVencimentoFormatada = date('d/m/Y', strtotime($dataVencimento));
-    
-                if ($matches['status'] == 'pago') {
-                    $lancamento = new Lancamento();
-                    $lancamento
-                        ->fill([
-                            "descricao"       => "Fatura Itaucard {$dataVencimentoFormatada}",
-                            "tipo"            => 'despesa',
-                            "status"          => 'pago',
-                            "data_vencimento" => $dataVencimento,
-                            "data_pagamento"  => $dataVencimento,
-                            "valor"           => $totalFatura,
-                        ])
-                        ->meioPagamento()->associate(MeioPagamento::where('nome', 'Conta Corrente Itaú Uniclass')->first())
-                        ->categoria()->associate(Categoria::where('nome', 'Pagamento de Fatura')->first())
-                        ->save();
-                }
-    
-                $this->info("{$nomeArquivo} Importado. Total da Fatura de {$dataVencimentoFormatada} : R$ {$totalFatura}");
-    
-                $this->info("");
+        foreach ($faturas as $fatura) {
+            foreach (Storage::files($fatura['path']) as $filePath) {
+                $arquivo = basename($filePath);
+
+                // Instancia o importador específico
+                $importador = $this->getImportador($fatura, $arquivo);
+
+                // Executa o import oficial (dispara o método collection() internamente)
+                Excel::import($importador, $filePath);
+
+                // Recupera os dados guardados na propriedade interna da classe importadora
+                $dadosDesteArquivo = $importador->getDadosNormalizados();
+
+                // Unifica na coleção principal do comando
+                $lancamentos = $lancamentos->merge($dadosDesteArquivo);
             }
         }
 
+        $categoriaService = new CategoriaService();
 
-        // $this->info('FIM');
-    }
+        $contadorCategoria = [
+            'categorizado' => 0,
+            'nao_categorizado' => 0,
+            'total' => 0
+        ];
 
-    /**
-     * Direciona para o importador correto (XLS ou CSV) de acordo com o mime
-     * type real do arquivo, e não apenas pela extensão do nome.
-     */
-    private function resolverImportador(string $arquivo, Fatura $fatura): LancamentoImportBase
-    {
-        $mime = Storage::mimeType($arquivo);
+        $csv = "data;descricao;valor;origem;categoria\n";
 
-        if (in_array($mime, self::MIMES_XLS, true)) {
-            return new LancamentoImportExcel($fatura);
+        foreach($lancamentos as $lancamento) {
+
+            if(str_contains(strtolower($lancamento['descricao']),'pagamento')) { continue; }
+
+            $categoria = $categoriaService->identificarCategoriaLancamento($lancamento['descricao']);
+            $lancamento['categoria'] = $categoria ? $categoria->nome : 'Sem categoria';
+
+            $lancamento['data_formatada'] = implode('/', array_reverse(explode('-',$lancamento['data'])));
+            $lancamento['valor_formatado'] = 'R$ ' . number_format($lancamento['valor'],2,',','.kf');
+
+            if($lancamento['categoria'] != 'Sem categoria') $contadorCategoria['categorizado']++;
+            if($lancamento['categoria'] == 'Sem categoria') $contadorCategoria['nao_categorizado']++;
+
+            $contadorCategoria['total']++;
+
+            $csv .= "{$lancamento['data_formatada']};{$lancamento['descricao']};{$lancamento['valor_formatado']};{$lancamento['origem']};{$lancamento['categoria']}\n";
         }
 
-        if (in_array($mime, self::MIMES_CSV, true)) {
-            return new LancamentoImportCsv($fatura);
-        }
+        Storage::put('csv/lancamentos.csv', $csv);
 
-        throw new RuntimeException("Tipo de arquivo não suportado (mime: {$mime}) para {$arquivo}");
+        $this->info("total|categorizado|nao_categorizado");
+        $this->info("{$contadorCategoria['total']}|{$contadorCategoria['categorizado']}|{$contadorCategoria['nao_categorizado']}");
+
+        $this->info('Fim do script');
     }
 }

@@ -36,17 +36,16 @@ class LancamentoImportCsv extends LancamentoImportBase implements OnEachRow, Wit
      */
     private ?string $titularPadrao;
 
-    public function __construct(Fatura $fatura, ?string $titularPadrao = null)
+    public function __construct(string $nomeArquivo, Fatura $fatura, ?string $titularPadrao = null)
     {
-        parent::__construct($fatura);
+        parent::__construct($nomeArquivo, $fatura);
         $this->titularPadrao = $titularPadrao;
     }
 
     /**
-     * O Nubank usa vírgula como delimitador normalmente, já que o "amount"
-     * vem com ponto decimal (ex: "23.90"), sem risco de confundir a coluna.
-     * TODO: confirme abrindo o CSV num editor de texto, caso perceba dados
-     * indo parar na coluna errada.
+     * O Nubank usa vírgula como separador de campos E vírgula como separador decimal,
+     * mas os valores monetários vêm entre aspas duplas (ex: "40,95"), o que permite
+     * ao parser distinguir o delimitador de campo do decimal dentro do valor.
      */
     public function getCsvSettings(): array
     {
@@ -78,15 +77,27 @@ class LancamentoImportCsv extends LancamentoImportBase implements OnEachRow, Wit
 
         $dataVencimento = Carbon::createFromFormat(self::FORMATO_DATA, trim($rowData['date']))->format('Y-m-d');
 
-        // O Nubank já usa ponto decimal (ex: "23.90"), então não passa pelo
-        // parseValor() pensado para o formato brasileiro (vírgula decimal).
-        $valorFormatado = (float) $rowData['amount'];
+        // O Nubank exporta o amount no formato pt-BR com vírgula decimal (ex: "40,95").
+        // Não pode fazer cast direto para float — passa pelo parseValor() para tratar corretamente.
+        // Valores de estorno/crédito vêm como "- 27,22" (com espaço), por isso o trim extra.
+        $amountLimpo = str_replace(' ', '', trim($rowData['amount']));
+        $valorFormatado = $this->parseValor($amountLimpo);
+
+        // Extrai parcelamento do título, que no Nubank vem embutido no formato "Descrição - Parcela N/M"
+        $titulo = $rowData['title'] ?? '';
+        $parcelamento = null;
+
+        if (preg_match('/\s*-\s*Parcela\s+(\d+)\/(\d+)\s*$/i', $titulo, $matchParcela)) {
+            $parcelamento = "Parcela {$matchParcela[1]} de {$matchParcela[2]}";
+            // Remove a parte de parcelamento da descrição para ficar limpo
+            $titulo = preg_replace('/\s*-\s*Parcela\s+\d+\/\d+\s*$/i', '', $titulo);
+        }
 
         $rowDataNormalizado = [
-            'lancamento' => $rowData['title'] ?? '',
-            'parcelamento' => null,
-            'nome' => $this->titularPadrao ?? '',
-            'tipo_do_cartao' => '',
+            'lancamento'       => $titulo,
+            'parcelamento'     => $parcelamento,
+            'nome'             => $this->titularPadrao ?? '',
+            'tipo_do_cartao'   => '',
             'numero_do_cartao' => '',
         ];
 

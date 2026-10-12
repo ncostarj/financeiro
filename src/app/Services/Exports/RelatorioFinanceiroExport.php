@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Exports; // Dica: A convenção do Laravel Excel é usar Exports e não Imports para gerar relatórios
+namespace App\Exports;
 
+use App\Exports\Sheets\DashboardSheet;
 use App\Exports\Sheets\FaturasSheet;
 use App\Exports\Sheets\LancamentosSheet;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -13,6 +14,7 @@ class RelatorioFinanceiroExport implements WithMultipleSheets
         return [
             new FaturasSheet(),
             new LancamentosSheet(),
+            new DashboardSheet(),
         ];
     }
 }
