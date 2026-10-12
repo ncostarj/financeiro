@@ -1,0 +1,4 @@
+config/*
+docker-compose.override.yml
+.kiro/specs
+.agents
