@@ -10,21 +10,23 @@ services:
     depends_on:
       - financeiro-php
     networks:
-      - proxy
+      - harbor-gateway
   financeiro-php:
-    image: homelab/php:8.2-fpm
+    image: harbor/php:8.2-fpm
     hostname: financeiro-php
     container_name: financeiro-php
     restart: always
     volumes:
       - ./src:/var/www/html/financeiro
-      - ~/.ssh:/home/proxy/.ssh:ro
+      - ~/.ssh:/home/harbor/.ssh:ro
     working_dir: /var/www/html/financeiro
     networks:
-      - proxy
-      - internal 
+      harbor-gateway:
+        aliases:
+          - financeiro.localhost
+      harbor-data: 
 networks:
-  proxy:
+  harbor-gateway:
     external: true
-  internal:
+  harbor-data:
     external: true

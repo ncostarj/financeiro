@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - bootstrap/app.php
+        - config/
+        - database/
+        - routes/
+
+    # Nível de análise de 0 (mais flexível) a 9 (mais estrito).
+    # Para projetos existentes ou em andamento, o nível 5 é um ótimo ponto de partida.
+    level: 5
+
+    # Caso precise ignorar erros específicos temporariamente:
+    # ignoreErrors:
+    #     - '#PHPDoc tag @var#'
