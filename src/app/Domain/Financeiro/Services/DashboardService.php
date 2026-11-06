@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Dashboards\Services;
 
 use App\Models\Lancamento;
 use App\Models\MeioPagamento;

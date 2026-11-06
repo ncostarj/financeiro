@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Faturas\Services;
 
 use Illuminate\Support\Collection;
 

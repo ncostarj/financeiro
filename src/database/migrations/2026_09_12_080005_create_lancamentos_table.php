@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('descricao');
             $table->date('data_vencimento');
             $table->date('data_pagamento')->nullable();
+            $table->string('hash', 64)->unique();
             
             // Controle de Parcelamento
             $table->boolean('parcelado')->default(false);

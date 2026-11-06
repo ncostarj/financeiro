@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Imports;
+namespace App\Domain\Financeiro\Importers;
 
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;

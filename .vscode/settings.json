@@ -1,15 +1,20 @@
 {
+  "phpstan.enabled": true,
   "phpstan.binCommand": [
     "docker",
     "exec",
     "-i",
+    "-w",
+    "/var/www/html/financeiro",
     "financeiro-php",
     "vendor/bin/phpstan"
   ],
-  "phpstan.paths": {
-    "${workspaceFolder}/src": "/var/www/html/financeiro"
-  },
   "phpstan.configFile": "phpstan.neon",
+  "phpstan.paths": {
+    "${workspaceFolder}": "/var/www/html/financeiro"
+  },
   "phpstan.memoryLimit": "1G",
-  "phpstan.checkOnSave": true
+  "phpstan.checkValidity": false,
+  "phpstan.showTypeOnHover": false,
+  "phpstan.showProgress": true
 }

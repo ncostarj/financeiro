@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Financeiro\Services;
 
-use App\Models\Categoria;
-use App\Models\Lancamento;
+use App\Domain\Financeiro\Models\Categoria;
 
 class CategoriaService
 {
-    // public function identificarCategoriaLancamento(Lancamento $lancamento): ?Categoria
-    public function identificarCategoriaLancamento(string $descricao): ?Categoria
+    public function identificarCategoria(string $descricao): ?Categoria
     {
         $descricao = strtolower($descricao);
 
